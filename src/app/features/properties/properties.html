@@ -1,0 +1,225 @@
+<div class="page-heading">
+  <div>
+    <span class="eyebrow">A PLACE FOR EVERY POSSIBILITY</span>
+    <h1>Find the next right place.</h1>
+    <p>Thoughtful listings. Clear details. A home for every next chapter.</p>
+  </div>
+  <div class="heading-actions">
+    <button class="button" [disabled]="exporting()" (click)="exportCsv()">
+      <app-icon name="down" />{{exporting()?'Exporting…':'Export'}}</button
+    ><button class="button primary" (click)="create()"><app-icon name="plus" />Add property</button>
+  </div>
+</div>
+<div class="directory-toolbar">
+  <div class="tabs">
+    <button
+      [class.active]="!query().status&&!query().featured"
+      (click)="update({status:'',featured:false})"
+    >
+      All properties<span class="count">{{store.properties().length}}</span></button
+    ><button
+      [class.active]="query().status==='available'&&!query().featured"
+      (click)="update({status:'available',featured:false})"
+    >
+      For sale</button
+    ><button
+      [class.active]="query().status==='reserved'&&!query().featured"
+      (click)="update({status:'reserved',featured:false})"
+    >
+      Reserved</button
+    ><button [class.active]="query().featured" (click)="update({featured:true,status:''})">
+      <app-icon name="heart" />Saved
+    </button>
+  </div>
+  <div class="view-switch">
+    <button
+      aria-label="Grid view"
+      [attr.aria-pressed]="view()==='grid'"
+      [class.active]="view()==='grid'"
+      (click)="update({view:'grid'})"
+    >
+      <app-icon name="grid" /></button
+    ><button
+      aria-label="List view"
+      [attr.aria-pressed]="view()==='list'"
+      [class.active]="view()==='list'"
+      (click)="update({view:'list'})"
+    >
+      <app-icon name="list" />
+    </button>
+  </div>
+</div>
+<div class="property-filters">
+  <label class="search-field"
+    ><app-icon name="search" /><input
+      aria-label="Search properties"
+      placeholder="Search address, neighborhood, or reference…"
+      [ngModel]="query().search"
+      (ngModelChange)="update({search:$event})" /></label
+  ><select
+    aria-label="Filter neighborhood"
+    [ngModel]="query().district"
+    (ngModelChange)="update({district:$event})"
+  >
+    <option value="">All neighborhoods</option>
+    @for(district of districts;track district){
+    <option>{{district}}</option>
+    }</select
+  ><select
+    aria-label="Filter property type"
+    [ngModel]="query().type"
+    (ngModelChange)="update({type:$event})"
+  >
+    <option value="">Property type</option>
+    @for(type of types;track type){
+    <option [value]="type">{{type}}</option>
+    }</select
+  ><select
+    aria-label="Filter asking price"
+    [ngModel]="query().price"
+    (ngModelChange)="update({price:$event})"
+  >
+    <option value="">Any price</option>
+    <option value="under-750">Under $750K</option>
+    <option value="750-1250">$750K – $1.25M</option>
+    <option value="over-1250">Above $1.25M</option>
+  </select>
+</div>
+<div class="results-heading">
+  <span
+    ><strong>{{result().total}}</strong> properties <i>·</i> {{compactMoney(result().valueCents)}}
+    combined asking value</span
+  >
+  <div>
+    <select
+      aria-label="Filter listing agent"
+      [ngModel]="query().agent"
+      (ngModelChange)="update({agent:$event})"
+    >
+      <option value="">All agents</option>
+      @for(agent of store.agents();track agent.id){
+      <option [value]="agent.id">{{agent.name}}</option>
+      }</select
+    ><select
+      aria-label="Filter listing status"
+      [ngModel]="query().status"
+      (ngModelChange)="update({status:$event})"
+    >
+      <option value="">All statuses</option>
+      <option value="available">For sale</option>
+      <option value="reserved">Reserved</option>
+      <option value="sold">Sold</option>
+      <option value="archived">Archived</option></select
+    ><select
+      aria-label="Sort properties"
+      [ngModel]="query().sort"
+      (ngModelChange)="update({sort:$event})"
+    >
+      <option value="recent">Recently updated</option>
+      <option value="oldest">Longest listed</option>
+      <option value="price-asc">Price: low to high</option>
+      <option value="price-desc">Price: high to low</option>
+    </select>
+  </div>
+</div>
+<div class="property-results" [attr.aria-busy]="loading()">
+  @if(error()){
+  <div class="empty-state">
+    <app-icon name="refresh" />
+    <h2>A small interruption.</h2>
+    <p>{{error()}}</p>
+    <button class="button primary" (click)="reload()">Try again</button>
+  </div>
+  }@else if(loading()&&!result().items.length){
+  <div class="property-grid">
+    @for(i of [1,2,3,4,5,6];track i){
+    <div class="skeleton-card"><i></i><span></span><span></span></div>
+    }
+  </div>
+  }@else if(!result().total){
+  <div class="empty-state">
+    <app-icon name="home" />
+    <h2>No places in this view.</h2>
+    <p>Try another neighborhood, price, or search.</p>
+    <button class="button" (click)="clear()">Clear filters</button>
+  </div>
+  }@else if(view()==='grid'){
+  <div class="property-grid" [class.is-loading]="loading()">
+    @for(property of result().items;track property.id){<app-property-card [property]="property" />}
+  </div>
+  }@else{
+  <div class="surface table-scroll" [class.is-loading]="loading()">
+    <table>
+      <thead>
+        <tr>
+          <th>Property</th>
+          <th>Asking price</th>
+          <th>Details</th>
+          <th>Status</th>
+          <th>Agent</th>
+          <th>Days listed</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for(property of result().items;track property.id){
+        <tr>
+          <td>
+            <a class="listing-cell" [routerLink]="['/properties',property.id]"
+              ><img
+                [src]="'/images/'+property.image+'.webp'"
+                alt="Illustrative property exterior"
+                width="100"
+                height="70"
+                loading="lazy"
+              /><span
+                ><strong>{{property.address}}</strong
+                ><small>{{property.district}} · {{property.reference}}</small></span
+              ></a
+            >
+          </td>
+          <td class="number">{{money(property.priceCents)}}</td>
+          <td>{{property.bedrooms}} beds · {{property.bathrooms}} baths</td>
+          <td>
+            <span [class]="'badge '+property.status"
+              >{{property.status==='available'?'For sale':property.status}}</span
+            >
+          </td>
+          <td>{{store.agent(property.agentId).name}}</td>
+          <td>{{daysOnMarket(property)}} days</td>
+          <td>
+            <a
+              class="icon-button"
+              [routerLink]="['/properties',property.id]"
+              [attr.aria-label]="'Open '+property.address"
+              ><app-icon name="arrowUp"
+            /></a>
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  }
+</div>
+<div class="pagination">
+  <span>{{loading()?'Refreshing your view…':result().total+' places, each with a story.'}}</span>
+  <div>
+    <button
+      class="icon-button"
+      aria-label="Previous page"
+      [disabled]="loading()||result().page===1"
+      (click)="update({page:result().page-1})"
+    >
+      <app-icon name="left" /></button
+    ><span>{{result().page}} / {{result().pages}}</span
+    ><button
+      class="icon-button"
+      aria-label="Next page"
+      [disabled]="loading()||result().page>=result().pages"
+      (click)="update({page:result().page+1})"
+    >
+      <app-icon name="right" />
+    </button>
+  </div>
+</div>

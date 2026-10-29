@@ -1,0 +1,152 @@
+@if(buyer();as buyer){<a class="back-link" routerLink="/buyers"
+  ><app-icon name="left" />All buyers</a
+>
+<div class="buyer-heading">
+  <div class="buyer-heading-person">
+    <span class="avatar large" [style.background]="store.agent(buyer.agentId).color"
+      >{{initials(buyer.name)}}</span
+    >
+    <div>
+      <span class="eyebrow">A RELATIONSHIP WORTH BUILDING</span>
+      <h1>{{buyer.name}}</h1>
+      <span [class]="'badge '+buyer.stage">{{buyer.stage}}</span>
+    </div>
+  </div>
+  <button class="button" (click)="edit()"><app-icon name="edit" />Edit preferences</button>
+</div>
+<div class="buyer-workspace">
+  <div class="buyer-main">
+    <div class="buyer-preferences">
+      <span
+        ><small>BUDGET RANGE</small
+        ><strong
+          >{{compactMoney(buyer.budgetMinCents)}} – {{compactMoney(buyer.budgetMaxCents)}}</strong
+        ></span
+      ><span
+        ><small>LOOKING FOR</small
+        ><strong class="capitalize">{{buyer.types.join(' / ')}}</strong></span
+      ><span><small>SPACE TO GROW</small><strong>{{buyer.bedrooms}}+ bedrooms</strong></span>
+    </div>
+    <div class="buyer-detail-tabs tabs">
+      <button [class.active]="tab()==='matches'" (click)="setTab('matches')">
+        <app-icon name="sparkle" />Matching properties<span class="count"
+          >{{matches().length}}</span
+        ></button
+      ><button [class.active]="tab()==='shortlist'" (click)="setTab('shortlist')">
+        Shortlist<span class="count">{{shortlist().length}}</span></button
+      ><button [class.active]="tab()==='activity'" (click)="setTab('activity')">Activity</button>
+    </div>
+    @if(tab()==='activity'){
+    <section class="surface buyer-activity">
+      <app-note-form [buyerId]="buyer.id" /><app-activity-feed [items]="history()" />
+    </section>
+    }@else{
+    <p class="match-explainer">
+      {{tab()==='matches'?'Available homes matching budget, bedrooms, property type, and preferred
+      neighborhoods.':'A considered collection for this buyer. Availability updates as offers move
+      forward.'}}
+    </p>
+    <div class="buyer-property-grid">
+      @for(property of tab()==='matches'?matches():shortlist();track property.id){
+      <div class="buyer-property">
+        <app-property-card [property]="property" /><button
+          class="shortlist-button"
+          [class.is-saved]="buyer.shortlistIds.includes(property.id)"
+          [disabled]="store.busy()"
+          [attr.aria-pressed]="buyer.shortlistIds.includes(property.id)"
+          (click)="saveProperty(property.id)"
+        >
+          <app-icon
+            [name]="buyer.shortlistIds.includes(property.id)?'check':'plus'"
+          />{{buyer.shortlistIds.includes(property.id)?'On '+buyer.name.split(' ')[0]+'’s
+          shortlist':'Add to buyer shortlist'}}
+        </button>
+      </div>
+      }@empty{
+      <div class="empty-state">
+        <app-icon [name]="tab()==='matches'?'sparkle':'heart'" />
+        <h2>
+          {{tab()==='matches'?'The right place is still out there.':'A little room for
+          possibility.'}}
+        </h2>
+        <p>
+          {{tab()==='matches'?'Adjust buyer preferences or explore new listings. Closed buyers have
+          no active matches.':'Add a matching property to begin this buyer’s shortlist.'}}
+        </p>
+        <button class="button" (click)="tab()==='matches'?edit():setTab('matches')">
+          {{tab()==='matches'?'Review preferences':'Explore matches'}}
+        </button>
+      </div>
+      }
+    </div>
+    }
+  </div>
+  <aside class="buyer-aside">
+    <section class="surface buyer-contact">
+      <span class="eyebrow">THE PERSON BEHIND THE SEARCH</span>
+      <h2>Keep in touch</h2>
+      <div class="contact-line"><app-icon name="mail" /><span>{{buyer.email}}</span></div>
+      <div class="contact-line"><app-icon name="phone" /><span>{{buyer.phone}}</span></div>
+      <div class="funding-chip">
+        <app-icon name="check" />{{buyer.funding==='cash'?'Cash
+        buyer':buyer.funding==='pre-approved'?'Mortgage pre-approved':'Financing in progress'}}
+      </div>
+      <div class="listing-agent">
+        <span class="avatar small" [style.background]="store.agent(buyer.agentId).color"
+          >{{store.agent(buyer.agentId).initials}}</span
+        >
+        <div><strong>{{store.agent(buyer.agentId).name}}</strong><small>Buyer agent</small></div>
+      </div>
+      @if(buyer.stage!=='closed'){<button class="button primary" (click)="schedule()">
+        <app-icon name="calendar" />Schedule viewing</button
+      ><button class="button" (click)="offer()">
+        <app-icon name="handshake" />Prepare an offer</button
+      >}
+    </section>
+    <section class="surface buyer-context">
+      <span class="eyebrow">WHAT MATTERS MOST</span>
+      <h2>Preferences & context</h2>
+      <div class="neighborhood-tags">
+        @for(district of buyer.districts;track district){<span>{{district}}</span>}@empty{<span
+          >Open to every neighborhood</span
+        >}
+      </div>
+      <p>{{buyer.notes||'A new relationship. Add context as you get to know this buyer.'}}</p>
+    </section>
+    <section class="surface compact-related">
+      <div class="surface-header">
+        <h2>Viewings<span class="count">{{viewings().length}}</span></h2>
+        <app-icon name="calendar" />
+      </div>
+      @for(viewing of viewings().slice(0,3);track viewing.id){<button
+        (click)="openViewing(viewing.id)"
+      >
+        <strong>{{store.property(viewing.propertyId).address}}</strong
+        ><span>{{dateLabel(viewing.startsAt)}} · {{timeLabel(viewing.startsAt)}}</span
+        ><span [class]="'badge '+viewing.status">{{viewing.status}}</span></button
+      >}@empty{
+      <p class="empty-small">No viewings yet. A first visit can change everything.</p>
+      }
+    </section>
+    <section class="surface compact-related">
+      <div class="surface-header">
+        <h2>Offers<span class="count">{{offers().length}}</span></h2>
+        <app-icon name="handshake" />
+      </div>
+      @for(offer of offers();track offer.id){<button (click)="openOffer(offer.id)">
+        <strong>{{store.property(offer.propertyId).address}}</strong
+        ><span>{{money(offer.amountCents)}}</span
+        ><span [class]="'badge '+offer.status">{{offer.status}}</span></button
+      >}@empty{
+      <p class="empty-small">No offers yet. Keep exploring the possibilities.</p>
+      }
+    </section>
+  </aside>
+</div>
+}@else{
+<div class="empty-state">
+  <app-icon name="people" />
+  <h1>This buyer is no longer here.</h1>
+  <a class="button" routerLink="/buyers">Back to buyers</a>
+</div>
+}

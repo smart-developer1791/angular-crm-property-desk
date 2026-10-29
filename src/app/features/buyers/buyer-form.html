@@ -1,0 +1,114 @@
+<div class="modal-top">
+  <span class="eyebrow">A HOME STARTS WITH PEOPLE</span
+  ><button
+    class="icon-button"
+    aria-label="Close buyer form"
+    [disabled]="store.busy()"
+    (click)="ref.close()"
+  >
+    <app-icon name="close" />
+  </button>
+</div>
+<h2 id="buyer-form-title">{{data.buyer?'Understand what matters.':'Meet your next buyer.'}}</h2>
+<p class="modal-description">A little context helps you find a place that feels right.</p>
+<form [formGroup]="form" (ngSubmit)="save()">
+  <fieldset class="form-fields" [disabled]="store.busy()">
+    <label
+      >Full name<input formControlName="name" maxlength="120" placeholder="e.g. Olivia Bennett"
+    /></label>
+    <div class="form-grid">
+      <label>Email address<input type="email" formControlName="email" /></label
+      ><label>Phone number<input type="tel" formControlName="phone" maxlength="30" /></label>
+    </div>
+    <div class="form-grid">
+      <label
+        >Buyer agent<select formControlName="agentId" aria-label="Buyer agent">
+          @for(agent of store.agents();track agent.id){
+          <option [value]="agent.id">{{agent.name}}</option>
+          }
+        </select></label
+      ><label
+        >Relationship stage<select formControlName="stage" aria-label="Relationship stage">
+          <option value="new">New inquiry</option>
+          <option value="qualifying">Qualifying</option>
+          <option value="active">Actively looking</option>
+          <option value="closed">Closed</option>
+        </select></label
+      >
+    </div>
+    <div class="form-divider">
+      <h3>The right fit</h3>
+      <span>Used to match available properties</span>
+    </div>
+    <div class="form-grid">
+      <label
+        >Minimum budget (USD)<input
+          type="number"
+          formControlName="budgetMin"
+          min="0.01"
+          max="10000000"
+          step="0.01" /></label
+      ><label
+        >Maximum budget (USD)<input
+          type="number"
+          formControlName="budgetMax"
+          min="0.01"
+          max="10000000"
+          step="0.01"
+      /></label>
+    </div>
+    <div class="form-grid">
+      <label
+        >Minimum bedrooms<input type="number" formControlName="bedrooms" min="0" max="12" /></label
+      ><label
+        >Funding<select formControlName="funding" aria-label="Funding">
+          <option value="pre-approved">Pre-approved</option>
+          <option value="cash">Cash buyer</option>
+          <option value="mortgage">Mortgage needed</option>
+        </select></label
+      >
+    </div>
+    <fieldset class="choice-fieldset">
+      <legend>Property types</legend>
+      <div class="choice-options">
+        @for(type of types;track type){<label
+          ><input
+            type="checkbox"
+            [checked]="form.controls.types.value.includes(type)"
+            (change)="toggleType(type)"
+          />{{type}}</label
+        >}
+      </div>
+    </fieldset>
+    <fieldset class="choice-fieldset">
+      <legend>Preferred neighborhoods <small>Leave empty for all</small></legend>
+      <div class="choice-options">
+        @for(district of districts;track district){<label
+          ><input
+            type="checkbox"
+            [checked]="form.controls.districts.value.includes(district)"
+            (change)="toggleDistrict(district)"
+          />{{district}}</label
+        >}
+      </div>
+    </fieldset>
+    <label
+      >Relationship notes<textarea
+        formControlName="notes"
+        rows="3"
+        maxlength="3000"
+        placeholder="Their priorities, timing, and what makes a place feel like home…"
+      ></textarea>
+    </label>
+  </fieldset>
+  @if(error()){
+  <p class="form-error" role="alert">{{error()}}</p>
+  }
+  <div class="modal-footer">
+    <button type="button" class="button" [disabled]="store.busy()" (click)="ref.close()">
+      Cancel</button
+    ><button class="button primary" [disabled]="store.busy()">
+      {{store.busy()?'Saving…':data.buyer?'Save preferences':'Add buyer'}}<app-icon name="arrow" />
+    </button>
+  </div>
+</form>

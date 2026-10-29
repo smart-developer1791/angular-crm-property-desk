@@ -1,0 +1,109 @@
+<div class="modal-top">
+  <span class="eyebrow">MAKE ROOM FOR A NEW CHAPTER</span
+  ><button
+    class="icon-button"
+    aria-label="Close listing form"
+    [disabled]="store.busy()"
+    (click)="ref.close()"
+  >
+    <app-icon name="close" />
+  </button>
+</div>
+<h2 id="property-form-title">
+  {{data.property?'Refine the details.':'A place worth discovering.'}}
+</h2>
+<p class="modal-description">Give your team the details that help a home find its people.</p>
+<form [formGroup]="form" (ngSubmit)="save()">
+  <fieldset class="form-fields" [disabled]="store.busy()">
+    <label
+      >Property address<input
+        formControlName="address"
+        placeholder="e.g. 1248 Willow Creek Lane"
+        maxlength="120"
+    /></label>
+    <div class="form-grid">
+      <label
+        >Neighborhood<select aria-label="Neighborhood" formControlName="district">
+          @for(district of districts;track district){
+          <option>{{district}}</option>
+          }
+        </select></label
+      ><label
+        >Property type<select aria-label="Property type" formControlName="type">
+          @for(type of types;track type){
+          <option [value]="type">{{type}}</option>
+          }
+        </select></label
+      >
+    </div>
+    <div class="form-grid">
+      <label
+        >Asking price (USD)<input
+          type="number"
+          formControlName="price"
+          min="0.01"
+          max="10000000"
+          step="0.01" /></label
+      ><label
+        >Listing agent<select aria-label="Listing agent" formControlName="agentId">
+          @for(agent of store.agents();track agent.id){
+          <option [value]="agent.id">{{agent.name}}</option>
+          }
+        </select></label
+      >
+    </div>
+    <div class="form-grid four">
+      <label>Bedrooms<input type="number" formControlName="bedrooms" min="0" max="12" /></label
+      ><label
+        >Bathrooms<input
+          type="number"
+          formControlName="bathrooms"
+          min="1"
+          max="12"
+          step="0.5" /></label
+      ><label>Area (sqft)<input type="number" formControlName="area" min="250" max="25000" /></label
+      ><label
+        >Year built<input type="number" formControlName="year" min="1850" [max]="maxYear"
+      /></label>
+    </div>
+    <label
+      >Listing description<textarea
+        formControlName="description"
+        rows="3"
+        maxlength="3000"
+        placeholder="Tell the story of this home…"
+      ></textarea></label
+    ><label
+      >Features<input
+        formControlName="features"
+        placeholder="Separate features with commas"
+      /><small>Up to 12 features, separated by commas.</small></label
+    ><label
+      >Listing image<select aria-label="Listing image" formControlName="image">
+        <option value="limestone">Contemporary limestone home</option>
+        <option value="cedar">Warm cedar residence</option>
+        <option value="condo">Boutique condominium</option>
+      </select></label
+    >
+    <div class="form-image-preview">
+      <img
+        [src]="'/images/'+form.controls.image.value+'.webp'"
+        alt="Selected illustrative listing exterior"
+        width="1536"
+        height="1024"
+      /><span>Curated fictional property imagery</span>
+    </div>
+  </fieldset>
+  @if(error()){
+  <p class="form-error" role="alert">{{error()}}</p>
+  }
+  <div class="modal-footer">
+    <button type="button" class="button" [disabled]="store.busy()" (click)="ref.close()">
+      Cancel</button
+    ><button class="button primary" [disabled]="store.busy()">
+      {{store.busy()?'Saving…':data.property?'Save changes':'Create listing'}}<app-icon
+        name="arrow"
+      />
+    </button>
+  </div>
+</form>

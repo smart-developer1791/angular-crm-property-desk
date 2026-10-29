@@ -1,0 +1,200 @@
+@if(property();as p){<a class="back-link" routerLink="/properties"
+  ><app-icon name="left" />All properties</a
+>
+<div class="property-heading">
+  <div>
+    <div class="detail-eyebrow">
+      <span class="eyebrow">{{p.reference}}</span
+      ><span [class]="'badge '+p.status">{{p.status==='available'?'For sale':p.status}}</span>
+    </div>
+    <h1>{{p.address}}</h1>
+    <p>
+      <app-icon name="pin" />{{p.district}}, Austin, TX <i>·</i> Listed {{dateLabel(p.listedOn)}}
+    </p>
+  </div>
+  <div class="heading-actions">
+    <button
+      class="button"
+      [class.saved]="p.featured"
+      [attr.aria-pressed]="p.featured"
+      (click)="favorite()"
+    >
+      <app-icon name="heart" />{{p.featured?'Saved':'Save property'}}</button
+    >@if(p.status!=='sold'){<button class="button" (click)="edit()">
+      <app-icon name="edit" />Edit listing</button
+    >}
+  </div>
+</div>
+<div class="property-workspace">
+  <div class="property-main">
+    <div class="property-hero">
+      <img
+        [src]="'/images/'+p.image+'.webp'"
+        [alt]="'Illustrative exterior of '+p.address"
+        width="1536"
+        height="1024"
+      /><span class="hero-image-label"
+        ><app-icon name="home" />{{p.type}}<i>·</i>Illustrative exterior</span
+      ><span class="hero-reference">HAVEN COLLECTION</span>
+    </div>
+    <div class="detail-specs">
+      <span><app-icon name="bed" /><strong>{{p.bedrooms}}</strong>Bedrooms</span
+      ><span><app-icon name="bath" /><strong>{{p.bathrooms}}</strong>Bathrooms</span
+      ><span><app-icon name="area" /><strong>{{p.area|number}}</strong>Square feet</span
+      ><span><app-icon name="calendar" /><strong>{{p.year}}</strong>Year built</span>
+    </div>
+    <section class="surface property-information">
+      <div class="tabs">
+        <button [class.active]="tab()==='overview'" (click)="setTab('overview')">Overview</button
+        ><button [class.active]="tab()==='viewings'" (click)="setTab('viewings')">
+          Viewings<span class="count">{{viewings().length}}</span></button
+        ><button [class.active]="tab()==='offers'" (click)="setTab('offers')">
+          Offers<span class="count">{{offers().length}}</span></button
+        ><button [class.active]="tab()==='activity'" (click)="setTab('activity')">Activity</button>
+      </div>
+      @if(tab()==='overview'){
+      <div class="property-description">
+        <span class="eyebrow">A LITTLE MORE ABOUT THIS PLACE</span>
+        <h2>Designed for the way life happens.</h2>
+        <p>{{p.description}}</p>
+        <h3>Details that make a difference</h3>
+        <div class="feature-pills">
+          @for(feature of p.features;track $index){<span><app-icon name="check" />{{feature}}</span
+          >}
+        </div>
+        <div class="neighborhood-note">
+          <span class="neighborhood-icon"><app-icon name="pin" /></span>
+          <div>
+            <span class="eyebrow">AT HOME IN {{p.district}}</span>
+            <h3>A neighborhood with a point of view.</h3>
+            <p>Austin, Texas. Explore the neighborhood with your buyer during the next viewing.</p>
+          </div>
+        </div>
+      </div>
+      }@else if(tab()==='viewings'){
+      <div class="surface-header">
+        <h2>Every visit, in one place</h2>
+        @if(p.status==='available'){<button class="button primary small" (click)="schedule()">
+          <app-icon name="plus" />Book a viewing</button
+        >}
+      </div>
+      <div class="related-list">
+        @for(viewing of viewings();track viewing.id){<button (click)="openViewing(viewing.id)">
+          <span class="related-date"
+            ><strong>{{dateLabel(viewing.startsAt)}}</strong
+            ><small>{{timeLabel(viewing.startsAt)}}</small></span
+          ><span class="related-person"
+            ><strong>{{store.buyer(viewing.buyerId).name}}</strong
+            ><small>{{store.agent(viewing.agentId).name}} · {{viewing.duration}} min</small></span
+          ><span [class]="'badge '+viewing.status">{{viewing.status}}</span
+          ><app-icon name="right" /></button
+        >}@empty{
+        <div class="empty-state">
+          <app-icon name="calendar" />
+          <h3>The door is open.</h3>
+          <p>Your first viewing will appear here.</p>
+        </div>
+        }
+      </div>
+      }@else if(tab()==='offers'){
+      <div class="surface-header">
+        <h2>Conversations moving forward</h2>
+        @if(p.status==='available'){<button class="button primary small" (click)="offer()">
+          <app-icon name="plus" />New offer</button
+        >}
+      </div>
+      <div class="related-list">
+        @for(offer of offers();track offer.id){<button (click)="openOffer(offer.id)">
+          <span class="avatar" [style.background]="store.agent(offer.agentId).color"
+            >{{initials(store.buyer(offer.buyerId).name)}}</span
+          ><span class="related-person"
+            ><strong>{{store.buyer(offer.buyerId).name}}</strong
+            ><small>Planned close {{dateLabel(offer.closingDate)}}</small></span
+          ><strong class="related-amount">{{money(offer.amountCents)}}</strong
+          ><span [class]="'badge '+offer.status">{{offer.status}}</span
+          ><app-icon name="right" /></button
+        >}@empty{
+        <div class="empty-state">
+          <app-icon name="handshake" />
+          <h3>A new conversation starts here.</h3>
+          <p>Draft an offer when your buyer finds the right fit.</p>
+        </div>
+        }
+      </div>
+      }@else{
+      <div class="activity-panel">
+        <app-note-form [propertyId]="p.id" /><app-activity-feed [items]="history()" />
+      </div>
+      }
+    </section>
+  </div>
+  <aside class="property-aside">
+    <section class="surface price-card">
+      <span class="eyebrow">ASKING PRICE</span
+      ><strong class="asking-price">{{money(p.priceCents)}}</strong>
+      <p>
+        {{money(rounded(p.priceCents/p.area))}} / sqft <i>·</i> {{daysOnMarket(p)}} days on market
+      </p>
+      <div class="price-divider"></div>
+      <div class="listing-agent">
+        <span class="avatar" [style.background]="store.agent(p.agentId).color"
+          >{{store.agent(p.agentId).initials}}</span
+        >
+        <div><strong>{{store.agent(p.agentId).name}}</strong><small>Listing agent</small></div>
+        <span class="agent-verified"><app-icon name="check" /></span>
+      </div>
+      @if(p.status==='available'){<button class="button primary" (click)="schedule()">
+        <app-icon name="calendar" />Schedule viewing</button
+      ><button class="button" (click)="offer()">
+        <app-icon name="handshake" />Prepare an offer</button
+      >}@else{
+      <div class="availability-note">
+        <app-icon [name]="p.status==='sold'?'check':'home'" /><span
+          >{{p.status==='reserved'?'This property is reserved. Follow the accepted offer for the
+          next steps.':p.status==='sold'?'A new chapter has begun. This property is sold.':'This
+          listing is archived. Relist it to start new conversations.'}}</span
+        >
+      </div>
+      }@if(p.status==='available'||p.status==='archived'){<button
+        class="quiet-action"
+        (click)="archive()"
+      >
+        <app-icon name="archive" />{{p.status==='archived'?'Relist property':'Archive listing'}}</button
+      >}
+    </section>
+    <section class="surface property-matches">
+      <div class="surface-header">
+        <h2>A potential fit<span class="count">{{matchingBuyers().length}}</span></h2>
+        <app-icon name="sparkle" />
+      </div>
+      <p>Buyers whose preferences match this available property.</p>
+      @for(buyer of matchingBuyers().slice(0,4);track buyer.id){<a
+        [routerLink]="['/buyers',buyer.id]"
+        ><span class="avatar small" [style.background]="store.agent(buyer.agentId).color"
+          >{{initials(buyer.name)}}</span
+        >
+        <div>
+          <strong>{{buyer.name}}</strong
+          ><small
+            >{{compactMoney(buyer.budgetMinCents)}} – {{compactMoney(buyer.budgetMaxCents)}}</small
+          >
+        </div>
+        <app-icon name="arrowUp" /></a
+      >}@empty{
+      <div class="empty-small">No active matches yet. A new buyer might be the right one.</div>
+      }
+    </section>
+    <div class="detail-footnote">
+      <app-icon name="note" />
+      <p>Keep the whole story together. Notes, viewings, and offers stay with this property.</p>
+    </div>
+  </aside>
+</div>
+}@else{
+<div class="empty-state">
+  <app-icon name="home" />
+  <h1>This place is no longer here.</h1>
+  <p>It may have been removed when the demo workspace was reset.</p>
+  <a class="button" routerLink="/properties">Back to properties</a>
+</div>
+}

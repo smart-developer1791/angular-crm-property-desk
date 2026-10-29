@@ -1,0 +1,130 @@
+<a class="skip-link" href="#main-content">Skip to content</a>@if(menuOpen()){<button
+  class="sidebar-backdrop"
+  aria-label="Close navigation"
+  (click)="closeMenu()"
+></button
+>}
+<aside class="sidebar" [class.is-open]="menuOpen()" aria-label="Agency navigation">
+  <a class="brand" routerLink="/overview" aria-label="Haven overview"
+    ><span class="brand-icon"><app-icon name="home" /></span
+    ><span>haven<span class="brand-dot">.</span></span></a
+  ><a class="workspace-switch" routerLink="/settings"
+    ><span class="workspace-avatar">H</span
+    ><span><strong>Haven Realty</strong><small>Austin, Texas</small></span
+    ><app-icon name="chevron" /></a
+  ><span class="nav-caption">WORKSPACE</span>
+  <nav aria-label="Main navigation">
+    @for(item of navigation;track item.path){<a
+      [routerLink]="'/'+item.path"
+      routerLinkActive="active"
+      ariaCurrentWhenActive="page"
+      ><app-icon [name]="item.icon" /><span>{{item.label}}</span
+      >@if(item.path==='properties'&&store.workspace()){<span class="nav-count"
+        >{{store.properties().length}}</span
+      >}@if(item.path==='offers'&&store.metrics().pending){<span class="nav-count offers-count"
+        >{{store.metrics().pending}}</span
+      >}</a
+    >}
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="sidebar-note">
+      <span class="sidebar-house" aria-hidden="true"><i></i><i></i><i></i></span>
+      <h2>A home for your next move.</h2>
+      <p>More possibility.<br />Less getting in the way.</p>
+      <button class="text-button" (click)="guide()">
+        Meet your workspace<app-icon name="arrow" />
+      </button>
+    </div>
+    <a
+      routerLink="/settings"
+      routerLinkActive="active"
+      ariaCurrentWhenActive="page"
+      class="settings-link"
+      ><app-icon name="settings" />Settings</a
+    ><button class="help-link" (click)="guide()">
+      <app-icon name="help" />Help & getting started<app-icon name="arrowUp" /></button
+    ><a class="profile" routerLink="/settings"
+      ><span class="avatar">AM</span
+      ><span><strong>Alex Morgan</strong><small>Managing broker</small></span
+      ><app-icon name="chevron"
+    /></a>
+  </div>
+</aside>
+<div class="app-main">
+  <header class="topbar">
+    <div class="breadcrumb">
+      <button
+        #menuButton
+        class="icon-button menu-button"
+        aria-label="Toggle navigation"
+        [attr.aria-expanded]="menuOpen()"
+        (click)="menuOpen.set(!menuOpen())"
+      >
+        <app-icon name="menu" /></button
+      ><span>Workspace</span><span class="breadcrumb-slash">/</span><strong>{{section()}}</strong>
+    </div>
+    <div class="topbar-actions">
+      <form class="global-search" (ngSubmit)="searchProperties()">
+        <app-icon name="search" /><input
+          #workspaceSearch
+          name="search"
+          [(ngModel)]="search"
+          aria-label="Search workspace properties"
+          placeholder="Search anything…"
+        /><kbd>/</kbd>
+      </form>
+      <span class="topbar-divider"></span
+      ><a
+        class="icon-button notification-button"
+        routerLink="/offers"
+        [queryParams]="{status:'submitted'}"
+        aria-label="View offers awaiting response"
+        ><app-icon name="bell" />@if(store.metrics().pending){<i></i>}</a
+      ><a
+        class="avatar topbar-avatar"
+        routerLink="/settings"
+        aria-label="Alex Morgan, workspace settings"
+        >AM</a
+      >
+    </div>
+  </header>
+  <main id="main-content" tabindex="-1">
+    @if(options.storageNotice()){
+    <div class="storage-notice" role="status">
+      <app-icon name="note" /><span>{{options.storageNotice()}}</span
+      ><button
+        class="icon-button"
+        aria-label="Dismiss storage notice"
+        (click)="options.storageNotice.set('')"
+      >
+        <app-icon name="close" />
+      </button>
+    </div>
+    }@if(store.loading()){
+    <div class="workspace-loading" role="status">
+      <span class="loading-home"><app-icon name="home" /></span>
+      <h1>A place for every possibility.</h1>
+      <p>Getting your agency ready…</p>
+    </div>
+    }@else if(store.error()){
+    <div class="empty-state workspace-error">
+      <app-icon name="refresh" />
+      <h1>Let’s try that again.</h1>
+      <p>{{store.error()}}</p>
+      <button class="button primary" (click)="store.load()">Reload workspace</button>
+    </div>
+    }@else{<router-outlet />}
+  </main>
+  <footer class="app-footer">
+    <span>Great places. Better connections.</span
+    ><span>HAVEN <i>•</i> YOUR PROPERTY WORKSPACE</span>
+  </footer>
+</div>
+@if(store.toast();as toast){
+<div class="toast" [class.toast-error]="toast.error">
+  <app-icon [name]="toast.error?'flag':'check'" /><span>{{toast.text}}</span
+  ><button class="icon-button" aria-label="Dismiss notification" (click)="store.toast.set(null)">
+    <app-icon name="close" />
+  </button>
+</div>
+}

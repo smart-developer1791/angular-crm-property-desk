@@ -1,0 +1,239 @@
+<div class="page-heading overview-heading">
+  <div>
+    <span class="eyebrow"><app-icon name="sun" />A GOOD DAY TO MAKE A MOVE</span>
+    <h1>{{greeting}}, Alex<span>.</span></h1>
+    <p>A little clarity. A lot of possibility. Here’s your agency at a glance.</p>
+  </div>
+  <div class="heading-actions">
+    <a class="date-chip" routerLink="/viewings"><app-icon name="calendar" />{{date}}</a
+    ><button class="button primary" (click)="create()"><app-icon name="plus" />Add property</button>
+  </div>
+</div>
+<section class="overview-metrics" aria-label="Agency metrics">
+  <a class="metric" routerLink="/properties" [queryParams]="{status:'available'}"
+    ><div class="metric-heading">
+      <span>Active listings</span><span class="metric-icon blue"><app-icon name="home" /></span>
+    </div>
+    <strong
+      >{{store.metrics().available}}<svg viewBox="0 0 100 32" aria-hidden="true">
+        <path [attr.d]="listingTrend()" /></svg
+    ></strong>
+    <p>
+      <span class="positive">{{compactMoney(store.metrics().portfolio)}}</span>total portfolio value
+    </p></a
+  ><a class="metric" routerLink="/buyers"
+    ><div class="metric-heading">
+      <span>Active buyers</span><span class="metric-icon violet"><app-icon name="people" /></span>
+    </div>
+    <strong
+      >{{store.metrics().buyers}}<span class="metric-avatars"
+        ><i>OB</i><i>NW</i><i>+{{store.metrics().buyers>2?store.metrics().buyers-2:0}}</i></span
+      ></strong
+    >
+    <p><span class="positive">{{newBuyers()}} new inquiries</span>ready for a conversation</p></a
+  ><a class="metric" routerLink="/viewings" [queryParams]="{scope:'all'}"
+    ><div class="metric-heading">
+      <span>Upcoming viewings</span
+      ><span class="metric-icon amber"><app-icon name="calendar" /></span>
+    </div>
+    <strong
+      >{{store.metrics().viewings}}<span class="metric-detail"
+        >On the calendar<app-icon name="arrowUp" /></span
+    ></strong>
+    <p><i class="tiny-dot amber-dot"></i>Every visit is a new possibility</p></a
+  ><a class="metric" routerLink="/offers"
+    ><div class="metric-heading">
+      <span>Offers awaiting response</span
+      ><span class="metric-icon green"><app-icon name="handshake" /></span>
+    </div>
+    <strong
+      >{{store.metrics().pending}}<span class="metric-detail"
+        >Let’s move forward<app-icon name="arrowUp" /></span
+    ></strong>
+    <p>
+      <span class="positive">{{compactMoney(store.metrics().reserved)}}</span>under accepted offers
+    </p></a
+  >
+</section>
+<div class="overview-layout">
+  <div class="overview-main">
+    <section>
+      <div class="section-heading">
+        <div>
+          <h2>Places with possibility<span class="section-dot"></span></h2>
+          <p>Your latest listings, ready for their next chapter.</p>
+        </div>
+        <a class="text-button" routerLink="/properties">All properties<app-icon name="arrow" /></a>
+      </div>
+      <div class="featured-properties">
+        @for(property of featured();track property.id){<app-property-card [property]="property" />}
+      </div>
+    </section>
+    <section class="surface buyer-snapshot">
+      <div class="surface-header">
+        <div>
+          <h2>People behind the possibilities</h2>
+          <p>A personal connection makes all the difference.</p>
+        </div>
+        <a class="text-button" routerLink="/buyers">All buyers<app-icon name="arrow" /></a>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Buyer</th>
+              <th>Looking for</th>
+              <th>Budget</th>
+              <th>Matches</th>
+              <th>Stage</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for(buyer of recentBuyers();track buyer.id){
+            <tr>
+              <td>
+                <a [routerLink]="['/buyers',buyer.id]" class="person-cell"
+                  ><span class="avatar" [style.background]="store.agent(buyer.agentId).color"
+                    >{{initials(buyer.name)}}</span
+                  ><span
+                    ><strong>{{buyer.name}}</strong
+                    ><small
+                      >{{buyer.funding==='cash'?'Cash
+                      buyer':buyer.funding==='pre-approved'?'Pre-approved':'Exploring
+                      financing'}}</small
+                    ></span
+                  ></a
+                >
+              </td>
+              <td>
+                <span class="capitalize">{{buyer.types.join(' / ')}}</span
+                ><small class="cell-secondary">{{buyer.bedrooms}}+ bedrooms</small>
+              </td>
+              <td class="number">
+                {{compactMoney(buyer.budgetMinCents)}} – {{compactMoney(buyer.budgetMaxCents)}}
+              </td>
+              <td>
+                <a class="match-chip" [routerLink]="['/buyers',buyer.id]"
+                  ><app-icon name="sparkle" />{{store.matches(buyer.id).length}} matches</a
+                >
+              </td>
+              <td><span [class]="'badge '+buyer.stage">{{buyer.stage}}</span></td>
+              <td>
+                <a
+                  class="icon-button"
+                  [routerLink]="['/buyers',buyer.id]"
+                  [attr.aria-label]="'Open '+buyer.name"
+                  ><app-icon name="arrowUp"
+                /></a>
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+    <div class="overview-bottom">
+      <section class="surface offer-chart">
+        <div class="surface-header">
+          <div>
+            <h2>Moving things forward</h2>
+            <p>Your current offer pipeline</p>
+          </div>
+          <a class="icon-button" routerLink="/offers" aria-label="Open offers"
+            ><app-icon name="arrowUp"
+          /></a>
+        </div>
+        <div class="offer-chart-body">
+          <div class="chart-value">
+            <strong>{{compactMoney(store.metrics().sold)}}</strong><span>Completed sale value</span>
+          </div>
+          <div class="offer-bars" role="group" aria-label="Offer counts by stage">
+            @for(bar of offerBars();track bar.status){<a
+              routerLink="/offers"
+              [queryParams]="{status:bar.status}"
+              [attr.aria-label]="bar.count+' '+bar.status+' offers'"
+              ><span class="bar-count">{{bar.count}}</span>
+              <div class="bar-track">
+                <i [style.height.%]="bar.count/maxOffers()*100" [style.background]="bar.color"></i>
+              </div>
+              <span>{{bar.status}}</span></a
+            >}
+          </div>
+        </div>
+      </section>
+      <section class="agency-note">
+        <span class="note-symbol" aria-hidden="true">↗</span
+        ><span class="eyebrow">MORE THAN A TRANSACTION</span>
+        <h2>Great places.<br />Even better connections.</h2>
+        <p>Keep the people at the heart of every property.</p>
+        <a class="text-button" routerLink="/buyers"
+          >Find their next home<app-icon name="arrow"
+        /></a>
+        <div class="note-lines" aria-hidden="true"><i></i><i></i><i></i></div>
+      </section>
+    </div>
+  </div>
+  <aside class="overview-aside">
+    <section class="agenda-card surface">
+      <div class="surface-header">
+        <h2>Up next<span class="live-dot"></span></h2>
+        <a class="icon-button" routerLink="/viewings" aria-label="Open viewing calendar"
+          ><app-icon name="calendar"
+        /></a>
+      </div>
+      <div class="agenda-list">
+        @for(viewing of upcoming();track viewing.id){<button
+          class="agenda-item"
+          (click)="view(viewing.id)"
+        >
+          <div class="agenda-time">
+            <span>{{localDay(viewing.startsAt)===today()?'TODAY':dateLabel(viewing.startsAt)}}</span
+            ><strong>{{timeLabel(viewing.startsAt)}}</strong
+            ><span class="agenda-duration">{{viewing.duration}} min</span>
+          </div>
+          <img
+            [src]="'/images/'+store.property(viewing.propertyId).image+'.webp'"
+            alt="Illustrative property exterior"
+            width="1536"
+            height="1024"
+            loading="lazy"
+          /><strong>{{store.property(viewing.propertyId).address}}</strong
+          ><span class="agenda-location"
+            ><app-icon name="pin" />{{store.property(viewing.propertyId).district}}</span
+          >
+          <div class="agenda-person">
+            <span class="avatar tiny" [style.background]="store.agent(viewing.agentId).color"
+              >{{initials(store.buyer(viewing.buyerId).name)}}</span
+            ><span>{{store.buyer(viewing.buyerId).name}}</span><app-icon name="arrow" />
+          </div></button
+        >}@empty{
+        <div class="empty-small">A little breathing room. Your next viewing will appear here.</div>
+        }
+      </div>
+      <a class="agenda-footer" routerLink="/viewings" [queryParams]="{scope:'all'}"
+        >View your calendar<app-icon name="arrow"
+      /></a>
+    </section>
+    <section class="recent-activity">
+      <div class="section-heading">
+        <h2>Around the agency</h2>
+        <a routerLink="/activity" class="icon-button" aria-label="View agency activity"
+          ><app-icon name="arrowUp"
+        /></a>
+      </div>
+      @for(event of latest();track event.id){<a
+        [routerLink]="event.propertyId?['/properties',event.propertyId]:['/buyers',event.buyerId]"
+        class="activity-snippet"
+        ><span [class]="'snippet-icon '+event.kind"
+          ><app-icon
+            [name]="event.kind==='offer'?'handshake':event.kind==='buyer'?'people':event.kind==='viewing'?'calendar':'note'"
+        /></span>
+        <div>
+          <p>{{event.text}}</p>
+          <small>{{event.actor}}</small>
+        </div></a
+      >}
+    </section>
+  </aside>
+</div>
